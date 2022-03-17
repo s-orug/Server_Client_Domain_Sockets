@@ -16,8 +16,9 @@ int main(int argc, char *argv[]) {
   strncpy(address.sun_path, argv[1], sizeof(address.sun_path) - 1);
   int rv = connect(sockfd, (struct sockaddr *)&address, sizeof address);
 
-  write(sockfd, argv[2], strlen(argv[2]));
-  read(sockfd, "hello", 6);
+  write(sockfd, argv[2], 256);//sends path
+  write(sockfd, argv[3], 256);//sends text
+
   close(sockfd);
   exit(0);
 }
