@@ -56,20 +56,18 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "PATH: \"%s\"\n", path);
     fflush(stdout);
 
-    if (file_checker(path) == 0) {
-      num_bytes = 0;
-      strcpy(tmp, "INVALID FILE AND NO TEXT\n");
-      write(client_sockfd, tmp, sizeof(tmp));
-      num_bytes += strlen(tmp);
-      fprintf(stderr, "BYTES SENT: %d\n", num_bytes);
-      close(client_sockfd);
-    }
-
     k = read(client_sockfd, buff2, sizeof(buff2)); // receives text
     buff2[k] = '\0';
     sprintf(seeking, "%s", buff2);
     fprintf(stderr, "SEEKING: \"%s\"\n", seeking);
     fflush(stdout);
+
+    if (file_checker(path) == 0 && strlen(seeking) != 0) {
+      num_bytes = 0;
+      strcpy(tmp, "INVALID FILE\n");
+      write(client_sockfd, tmp, sizeof(tmp));
+      num_bytes += strlen(tmp);
+    }
 
     if (strlen(seeking) != 0) {
       FILE *fp;
