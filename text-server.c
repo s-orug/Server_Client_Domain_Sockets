@@ -9,11 +9,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-jmp_buf savebuf;
-
-#define TRY if (setjmp(savebuf) == 0)
-#define CATCHALL else
-
 bool file_checker(char filename[]) {
   FILE *f;
   if (f = fopen(filename, "r")) {
@@ -22,6 +17,7 @@ bool file_checker(char filename[]) {
   }
   return false; // returns false if it can't open
 }
+
 int main(int argc, char *argv[]) {
   int server_sockfd, client_sockfd, n;
   struct sockaddr_un server_addr;
@@ -62,38 +58,37 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "SEEKING: \"%s\"\n", seeking);
     fflush(stdout);
 
-    if (file_checker(path) == 0 && strlen(seeking) != 0) {
+    if (file_checker(path) < 1) {
       num_bytes = 0;
       strcpy(tmp, "INVALID FILE\n");
       write(client_sockfd, tmp, sizeof(tmp));
       num_bytes += strlen(tmp);
+      close(client_sockfd);
     }
 
     if (strlen(seeking) != 0) {
       FILE *fp;
       char command[2048], line[2048], *store = "";
       sprintf(command, "grep \"%s\" %s ", seeking, path);
-      // TRY {
-      fp = popen(command, "r");
-      if (fp == NULL) {
-        printf("errrrrr\n");
-      }
-      while (fgets(line, sizeof(line) - 1, fp) != NULL) {
-        sprintf(tmp, "%s", line);
+      if (file_checker(path) != 0) {
+        fp = popen(command, "r");
+
+        while (fgets(line, sizeof(line) - 1, fp) != NULL) {
+          sprintf(tmp, "%s", line);
+          write(client_sockfd, tmp, sizeof(tmp));
+          num_bytes += strlen(tmp);
+        }
+        strcpy(tmp, "");
         write(client_sockfd, tmp, sizeof(tmp));
-        num_bytes += strlen(tmp);
+        pclose(fp);
       }
-      pclose(fp);
-      /*}
-      CATCHALL {
-        num_bytes = 0;
-        strcpy(tmp, "INVALID FILE AND NO TEXT\n");
-        write(client_sockfd, tmp, sizeof(tmp));
-        num_bytes += strlen(tmp);
-      }*/
+
       fprintf(stderr, "BYTES SENT: %d\n", num_bytes);
       close(client_sockfd);
     } else {
+      if (strlen(seeking) == 0) {
+        num_bytes = 0;
+      }
       fprintf(stderr, "BYTES SENT: %d\n", num_bytes);
     }
     close(client_sockfd);

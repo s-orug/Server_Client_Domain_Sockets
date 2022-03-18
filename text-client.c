@@ -16,10 +16,15 @@ int main(int argc, char *argv[]) {
   strncpy(address.sun_path, argv[1], sizeof(address.sun_path) - 1);
   int rv = connect(sockfd, (struct sockaddr *)&address, sizeof address);
 
+  if (strlen(argv[3]) < 1) {
+    argv[3] = "\030";
+  }
+
   write(sockfd, argv[2], 512); // sends path
   write(sockfd, argv[3], 512); // sends text
-  
+
   while (reading = read(sockfd, tmp, sizeof(tmp))) {
+    fprintf(stderr, "SERVER CONNECCTION ACCEPTED\n");
     if (strlen(tmp) > 0 && strlen(argv[3]) > 0) {
       num_bytes += strlen(tmp);
       fprintf(stdout, "%d\t%s", i, tmp);
