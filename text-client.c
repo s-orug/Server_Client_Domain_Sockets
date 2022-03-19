@@ -41,5 +41,5 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "\nBYTES RECEIVED: %d\n",
           num_bytes); // logging number of bytes received
   close(sockfd);      // closes the socket file descriptor
-  exit(0);
+  return 0;
 }
